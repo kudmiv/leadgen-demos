@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Демо: запись + напоминания + отзывы</title>
+<style>
+  :root{
+    --bg:#f4f6fa; --card:#ffffff; --ink:#1c2733; --muted:#6b7a8d;
+    --accent:#2563eb; --accent2:#059669; --warn:#d97706; --bad:#dc2626; --line:#e2e8f0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+  header{background:var(--card);border-bottom:1px solid var(--line);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+  header h1{font-size:17px;font-weight:700}
+  .brand{display:flex;align-items:center;gap:10px}
+  .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800}
+  .niche-switch{display:flex;background:var(--bg);border-radius:8px;padding:3px;gap:3px}
+  .niche-switch button{border:0;background:transparent;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--muted);font-weight:600}
+  .niche-switch button.active{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+  .badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:#eff6ff;color:var(--accent)}
+  main{max-width:1080px;margin:0 auto;padding:18px 16px 60px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:820px){main{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .card h2{font-size:14px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .kpis{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media(max-width:820px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .kpi .v{font-size:24px;font-weight:800}
+  .kpi .l{font-size:12px;color:var(--muted);margin-top:2px}
+  .kpi .d{font-size:11px;font-weight:700;margin-top:4px}
+  .up{color:var(--accent2)} .down{color:var(--bad)} .flat{color:var(--muted)}
+  /* календарь */
+  .cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .cal-head button{border:1px solid var(--line);background:#fff;border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:14px}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+  .cal-grid .wd{font-size:11px;color:var(--muted);padding:4px 0;font-weight:700}
+  .cal-grid .day{border:1px solid var(--line);border-radius:7px;padding:6px 0;cursor:pointer;font-size:13px;background:#fff}
+  .cal-grid .day:hover{border-color:var(--accent)}
+  .cal-grid .day.sel{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700}
+  .cal-grid .day.full{background:#f8fafc;color:#cbd5e1;cursor:not-allowed;text-decoration:line-through}
+  .slots{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+  .slot{border:1px solid var(--line);border-radius:7px;padding:6px 10px;font-size:12px;cursor:pointer;background:#fff}
+  .slot:hover{border-color:var(--accent)}
+  .slot.sel{background:var(--accent2);color:#fff;border-color:var(--accent2);font-weight:700}
+  .slot.full{color:#cbd5e1;cursor:not-allowed;text-decoration:line-through}
+  .btn{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;width:100%;margin-top:12px}
+  .btn:disabled{background:#cbd5e1;cursor:not-allowed}
+  .btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  /* список записей */
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{text-align:left;font-size:11px;color:var(--muted);text-transform:uppercase;padding:6px 8px;border-bottom:1px solid var(--line)}
+  td{padding:8px;border-bottom:1px solid var(--line)}
+  .st{font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap}
+  .st.ok{background:#dcfce7;color:#166534}.st.wait{background:#fef3c7;color:#92400e}.st.late{background:#fee2e2;color:#991b1b}.st.done{background:#e0e7ff;color:#3730a3}
+  /* напоминания */
+  .msg{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;background:#f8fafc}
+  .ava{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#34d399,#2563eb);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
+  .msg .t{font-size:12.5px;line-height:1.45}
+  .msg .meta{font-size:11px;color:var(--muted);margin-top:3px}
+  .tick{color:var(--accent2);font-weight:800}
+  /* отзывы */
+  .rev{border-bottom:1px solid var(--line);padding:10px 0}
+  .rev:last-child{border-bottom:0}
+  .stars{color:#f59e0b;letter-spacing:1px;font-size:13px}
+  .stars .off{color:#e2e8f0}
+  .rev p{font-size:12.5px;margin-top:4px;line-height:1.45}
+  .rev .who{font-size:11px;color:var(--muted);margin-top:4px}
+  .reply{margin-top:6px;font-size:12px;background:#eff6ff;border-radius:8px;padding:7px 10px;color:#1e40af}
+  .rating-big{font-size:34px;font-weight:800}
+  .rating-sub{font-size:12px;color:var(--muted)}
+  .bar{height:6px;border-radius:4px;background:#e2e8f0;margin:4px 0;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--accent)}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1c2733;color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:50}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo" id="logo">✚</div>
+    <div>
+      <h1 id="title">Панель клиники</h1>
+      <span class="badge" id="badge">ДЕМО · синтетические данные</span>
+    </div>
+  </div>
+  <div class="niche-switch">
+    <button data-niche="med" class="active">🏥 Клиника</button>
+    <button data-niche="auto">🚗 Автосервис</button>
+  </div>
+</header>
+
+<main>
+  <div class="kpis">
+    <div class="kpi"><div class="v" id="k1v">0%</div><div class="l" id="k1l">Конверсия в запись</div><div class="d up" id="k1d"></div></div>
+    <div class="kpi"><div class="v" id="k2v">0%</div><div class="l" id="k2l">Пришли после напоминания</div><div class="d up" id="k2d"></div></div>
+    <div class="kpi"><div class="v" id="k3v">0%</div><div class="l" id="k3l">Заполненность расписания</div><div class="d flat" id="k3d"></div></div>
+    <div class="kpi"><div class="v" id="k4v">0.0</div><div class="l">Средний рейтинг</div><div class="d up" id="k4d"></div></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="dot" style="background:var(--accent)"></span><span id="h-book">Онлайн-запись</span></h2>
+    <div class="cal-head">
+      <button id="prevM">‹</button><b id="monthLabel"></b><button id="nextM">›</button>
+    </div>
+    <div class="cal-grid" id="cal"></div>
+    <div class="slots" id="slots"></div>
+    <button class="btn" id="bookBtn" disabled>Записаться</button>
+  </div>
+
+  <div class="card">
+    <h2><span class="dot" style="background:var(--accent2)"></span><span id="h-today">Записи на сегодня</span></h2>
+    <table>
+      <thead><tr><th>Время</th><th id="th-client">Пациент</th><th>Услуга</th><th>Статус</th></tr></thead>
+      <tbody id="todayList"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2><span class="dot" style="background:var(--warn)"></span>Напоминания (автоотправка за 24 ч и за 2 ч)</h2>
+    <div id="msgs"></div>
+    <button class="btn ghost" id="sendRem">Отправить напоминания сейчас</button>
+  </div>
+
+  <div class="card">
+    <h2><span class="dot" style="background:#7c3aed"></span>Отзывы и репутация</h2>
+    <div style="display:flex;gap:16px;align-items:center;margin-bottom:10px">
+      <div><div class="rating-big" id="rBig">4.6</div><div class="rating-sub" id="rSub">на основе 128 отзывов</div></div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px"><span>5★</span><div class="bar" style="flex:1"><i style="width:72%"></i></div></div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px"><span>4★</span><div class="bar" style="flex:1"><i style="width:18%"></i></div></div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px"><span>3★</span><div class="bar" style="flex:1"><i style="width:6%"></i></div></div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px"><span>2★</span><div class="bar" style="flex:1"><i style="width:2%"></i></div></div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px"><span>1★</span><div class="bar" style="flex:1"><i style="width:2%"></i></div></div>
+      </div>
+    </div>
+    <div id="reviews"></div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const T = {
+  med:{
+    title:'Панель клиники «Здоровье+»', logo:'✚',
+    book:'Онлайн-запись к врачу', today:'Записи на сегодня', client:'Пациент', svc:'Услуга',
+    kpi:['Конверсия в запись','Пришли после напоминания','Заполненность расписания','Средний рейтинг'],
+    slots:['09:00','10:00','11:00','12:30','14:00','15:30','17:00','18:30'],
+    today:[['09:00','Иванова А.П.','Приём терапевта','done'],['10:00','Петров С.К.','УЗИ брюшной полости','ok'],['11:00','Сидорова М.В.','Приём терапевта','wait'],['12:30','Козлов Д.А.','Анализы','ok'],['14:00','Новикова Е.И.','Приём терапевта','late'],['15:30','Фёдоров А.Н.','УЗИ','wait'],['17:00','Морозова Л.П.','Анализы','ok']],
+    msgs:[
+      {n:'Иванова А.П.', m:'Напоминаем: завтра в 10:00 приём у терапевта. Отменить или перенести — ответьте «перенести»', s:'доставлено · прочитано'},
+      {n:'Петров С.К.', m:'Напоминаем: завтра в 12:30 УЗИ. Приходите натощак, возьмите направление', s:'доставлено · прочитано'},
+      {n:'Сидорова М.В.', m:'Напоминаем: завтра в 11:00 приём. За 2 часа придёт повторное напоминание', s:'в очереди на отправку'}
+    ],
+    reviews:[
+      {s:5, t:'Записалась онлайн за минуту, никто не заставлял ждать в очереди. Врач приняла вовремя.', w:'Анна, 2 дня назад', r:'Спасибо, Анна! Рады, что было удобно.'},
+      {s:5, t:'Пришло напоминание за день — не забыла про приём. Очень выручает.', w:'Ольга, неделю назад', r:''},
+      {s:4, t:'Всё хорошо, но хотелось бы видеть свободные слоты сразу, а не звонить.', w:'Дмитрий, 2 недели назад', r:'Дмитрий, онлайн-запись как раз это и закрывает — попробуйте ссылку в шапке профиля.'},
+      {s:2, t:'Записалась на 15:30, прождала 40 минут. Почему нет уведомления, что врач задерживается?', w:'Елена, 3 недели назад', r:'Елена, приносим извинения. В новой системе患者 видят задержку в реальном времени — хотим показать вам демо.'}
+    ],
+    bookOk:'Вы записаны! Напоминание придёт за 24 часа и за 2 часа до приёма.',
+    kpiV:['86%','+31%','74%','4.6'], kpiD:['+12% за месяц','+18% за месяц','+9% за месяц','+0.3 за месяц']
+  },
+  auto:{
+    title:'Панель автосервиса «АвтоМастер»', logo:'🚗',
+    book:'Онлайн-запись на сервис', today:'Заявки на сегодня', client:'Клиент', svc:'Работа',
+    kpi:['Конверсия в запись','Явились после напоминания','Загрузка постов','Средний рейтинг'],
+    slots:['08:00','09:30','11:00','12:30','14:00','15:30','17:00','18:00'],
+    today:[['08:00','Волков А.С.','ТО, замена масла','done'],['09:30','Ким Д.В.','Диагностика подвески','ok'],['11:00','Орлова Н.П.','Шиномонтаж','wait'],['12:30','Зайцев И.М.','Замена тормозных колодок','ok'],['14:00','Павлова С.Ю.','ТО','late'],['15:30','Гусев Р.К.','Ремонт КПП','wait'],['17:00','Лебедев Т.Н.','Диагностика','ok']],
+    msgs:[
+      {n:'Волков А.С.', m:'Напоминаем: завтра в 09:30 ТО. Свободный въезд на пост №2, ждать не придётся', s:'доставлено · прочитано'},
+      {n:'Ким Д.В.', m:'Напоминаем: завтра в 11:00 диагностика подвески. Если перенести — ответьте «перенести»', s:'доставлено · прочитано'},
+      {n:'Орлова Н.П.', m:'Напоминаем: завтра в 12:30 шиномонтаж. За 2 часа придёт повторное напоминание', s:'в очереди на отправку'}
+    ],
+    reviews:[
+      {s:5, t:'Записался онлайн, приехал — сразу приняли. Никакой очереди у стойки, как раньше.', w:'Артём, 3 дня назад', r:'Спасибо, Артём! Рады, что поездка прошла гладко.'},
+      {s:5, t:'Пришло напоминание — не забыл про запись. Раньше постоянно переносил.', w:'Марина, неделю назад', r:''},
+      {s:4, t:'Сделали вовремя, но хотелось бы понимать статус ремонта, пока ждёшь.', w:'Сергей, 2 недели назад', r:'Сергей, в новой системе клиент видит статус поста в реальном времени — покажем демо.'},
+      {s:2, t:'Записывался на 15:30, в итоге прождал час. Никто не предупредил о задержке.', w:'Виктор, 2 недели назад', r:'Виктор, извините. В новой системе вы видите задержку сразу и получаете уведомление — хотим показать вам демо.'}
+    ],
+    bookOk:'Заявка принята! Напоминание придёт за 24 часа и за 2 часа до визита.',
+    kpiV:['81%','+27%','80%','4.4'], kpiD:['+15% за месяц','+16% за месяц','+11% за месяц','+0.4 за месяц']
+  }
+};
+
+let cur = 'med';
+let month = new Date(); month.setDate(1);
+let selDay = null, selSlot = null;
+const fullDays = [3, 9, 15]; // дни с полной загрузкой (демо)
+const toastEl = document.getElementById('toast');
+function toast(t){ toastEl.textContent=t; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),2600); }
+
+function stars(n){ let h=''; for(let i=1;i<=5;i++) h += `<span class="${i<=n?'':'off'}">★</span>`; return h; }
+
+function renderCal(){
+  const t = T[cur];
+  document.getElementById('monthLabel').textContent = month.toLocaleString('ru',{month:'long',year:'numeric'});
+  const first = (month.getDay()+6)%7; // пн=0
+  const days = new Date(month.getFullYear(), month.getMonth()+1, 0).getDate();
+  let h = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map(d=>`<div class="wd">${d}</div>`).join('');
+  for(let i=0;i<first;i++) h+='<div></div>';
+  const today = new Date();
+  for(let d=1;d<=days;d++){
+    const isPast = new Date(month.getFullYear(),month.getMonth(),d) < new Date(today.getFullYear(),today.getMonth(),today.getDate());
+    const cls = ['day', isPast?'full':'', fullDays.includes(d)?'full':'', selDay===d?'sel':''].join(' ').trim();
+    h += `<div class="${cls}" data-d="${d}" ${isPast||fullDays.includes(d)?'':'onclick="pickDay('+d+')"'}>${d}</div>`;
+  }
+  document.getElementById('cal').innerHTML = h;
+}
+function pickDay(d){
+  selDay = d; selSlot = null; renderCal(); renderSlots();
+  document.getElementById('bookBtn').disabled = false;
+  document.getElementById('bookBtn').textContent = T[cur].niche==='med' ? 'Записаться' : 'Записаться';
+}
+function renderSlots(){
+  const t = T[cur];
+  let h='';
+  t.slots.forEach((s,i)=>{
+    const full = (selDay===new Date().getDate()) && i<2;
+    h += `<div class="slot ${full?'full':''} ${selSlot===s?'sel':''}" ${full?'':'onclick="pickSlot(\''+s+'\')"'}>${s}</div>`;
+  });
+  document.getElementById('slots').innerHTML = h || '<span style="color:var(--muted);font-size:12px">Сначала выберите дату</span>';
+}
+function pickSlot(s){ selSlot=s; renderSlots(); document.getElementById('bookBtn').textContent = 'Записаться на '+selSlot; }
+
+function renderAll(){
+  const t = T[cur];
+  document.getElementById('title').textContent = t.title;
+  document.getElementById('logo').textContent = t.logo;
+  document.getElementById('h-book').textContent = t.book;
+  document.getElementById('h-today').textContent = t.today;
+  document.getElementById('th-client').textContent = t.client;
+  t.kpi.forEach((l,i)=>document.getElementById('k'+(i+1)+'l').textContent=l);
+  t.kpiV.forEach((v,i)=>{document.getElementById('k'+(i+1)+'v').textContent=v; document.getElementById('k'+(i+1)+'d').textContent=t.kpiD[i];});
+  document.getElementById('todayList').innerHTML = t.today.map(r=>{
+    const st={ok:['Подтверждена','ok'],wait:['Ожидает','wait'],late:['Опоздание','late'],done:['Завершён','done']}[r[3]];
+    return `<tr><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td><td><span class="st ${st[1]}">${st[0]}</span></td></tr>`;
+  }).join('');
+  document.getElementById('msgs').innerHTML = t.msgs.map(m=>`
+    <div class="msg"><div class="ava">${m.n[0]}</div><div><div class="t"><b>${m.n}.</b> ${m.m}</div><div class="meta">SMS + мессенджер · <span class="tick">✓</span> ${m.s}</div></div></div>`).join('');
+  document.getElementById('reviews').innerHTML = t.reviews.map(r=>`
+    <div class="rev"><div class="stars">${stars(r.s)}</div><p>${r.t}</p><div class="who">${r.w}</div>${r.r?`<div class="reply">↩ Ответ клиники: ${r.r}</div>`:''}</div>`).join('');
+  renderCal(); renderSlots();
+}
+
+document.querySelectorAll('.niche-switch button').forEach(b=>{
+  b.onclick = ()=>{ cur=b.dataset.niche; document.querySelectorAll('.niche-switch button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); selDay=null; selSlot=null; document.getElementById('bookBtn').disabled=true; document.getElementById('bookBtn').textContent='Записаться'; renderAll(); };
+});
+document.getElementById('prevM').onclick = ()=>{ month.setMonth(month.getMonth()-1); renderCal(); };
+document.getElementById('nextM').onclick = ()=>{ month.setMonth(month.getMonth()+1); renderCal(); };
+document.getElementById('bookBtn').onclick = ()=>{ toast(T[cur].bookOk); };
+document.getElementById('sendRem').onclick = ()=>{
+  document.querySelectorAll('#msgs .meta').forEach(m=>{ m.innerHTML='SMS + мессенджер · <span class="tick">✓</span> доставлено · прочитано'; });
+  toast('Напоминания отправлены: 3 клиентам');
+};
+renderAll();
+</script>
+</body>
+</html>
